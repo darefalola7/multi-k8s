@@ -1,0 +1,37 @@
+apiVersion: apps/v1 #api version to use
+kind: Deployment #kind of object
+metadata:
+  name: server-deployment #name of object
+spec: #configure deployment
+  replicas: 3 #number of pod to be running in this deployment
+  selector: #used to state what this deployment will be managing
+    matchLabels:
+      component: server #this will manage pods with the labels component web
+  template: #pod template to be used to create pods
+    metadata:
+      labels: #how the deployment identifies the pod to be managed. it should be similar to the selector
+        component: server
+    spec: #all containers to be run in this pod
+      containers:
+        - name: server
+          image: damilare77/multi-server-10-14 #image to use to create the container
+          ports:
+            - containerPort: 5000 #port application is running on
+          env:
+            - name: REDIS_HOST
+              value: redis-cluster-ip-service
+            - name: REDIS_PORT
+              value: "6379"
+            - name: PGUSER
+              value: postgres
+            - name: PGHOST
+              value: postgres-cluster-ip-service
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              value: postgres
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: PGPASSWORD
+                  name: pgpassword

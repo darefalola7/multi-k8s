@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim #PVCs are like advertisement of what k8s will find an instance of storage that meets this claim
+metadata:
+  name: database-persistent-volume-claim
+spec:
+  accessModes:
+    - ReadWriteOnce #slice of the hard drive that can used only by a single node,
+    #READWRITEMANY - can be used by multiple nodes
+    #READWRITEMANY can be read and written to by many nodes
+  resources:
+    requests:
+      storage: 2Gi #amount of storage
+#      storageClassName: cloud specific

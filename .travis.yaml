@@ -5,15 +5,37 @@ sudo: true
 
 #install docker service
 services:
-  - docker
+  - docker #provides access to docker
+
+env: #exported environment variables
+  global:
+    - SHA=$(git rev-parse HEAD) #env variable to use to tag docker builds. it is also the git commit sha
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1 #disable prompts from the gcloud
 
 #things to do before main tasks are done
 #get google cloud sdk
 #build docker image for tests
 before_install:
   - openssl aes-256-cbc -K $encrypted_9f3b5599b056_key -iv $encrypted_9f3b5599b056_iv -in service-account.json.enc -out service-account.json -d
-  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - curl https://sdk.cloud.google.com | bash > /dev/null; #download and install gcloud sdk
   - source $HOME/google-cloud-sdk/path.bash.inc
-  - gcloud components update kubectl
-  - gcloud auth activate-service-account --key-file service-account.json
-  - docker build -t damilare77/react-test -f ./client/Dockerfile.dev ./client
+  - gcloud components update kubectl #install kubernetes
+  - gcloud auth activate-service-account --key-file service-account.json #authenticate travis to access gcp project
+  - gcloud config set project multi-k8s-297614 #set project to be used
+  - gcloud config set compute/zone europe-west2-a #set compute zone equal to what is on k8s dashboard
+  - gcloud container clusters get-credentials multi-cluster #tell travis what cluster to work with
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin #docker login
+  - docker build -t damilare77/react-test -f ./client/Dockerfile.dev ./client #build test image
+
+#contains all the commands that needs to execute the test suite
+#for testing
+#all tests should be here
+#if this fails the travis build stops
+script:
+  - docker run -e CI=true damilare77/react-test yarn run test -- --coverage
+
+deploy:
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: main

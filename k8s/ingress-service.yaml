@@ -4,17 +4,37 @@ metadata:
   name: ingress-service
   annotations:
     kubernetes.io/ingress.class: nginx #create ingress controller based on nginx project
-    nginx.ingress.kubernetes.io/use-regex: 'true'
+    nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$1 #rewrite url to /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true" #force every traffic to use https connection
 spec:
+  tls:
+    - hosts:
+        - faloladare.com.ng
+        - www.faloladare.com.ng
+      secretName: faloladare-multi-com
+
   rules:
+    - host: faloladare.com.ng
     - http:
         paths:
           - path: /?(.*) #send requests to any path that starts with / or ff by /* and not /api
             backend:
               serviceName: client-cluster-ip-service
               servicePort: 3000
-          - path: /api/?(.*)  #send requests to any path that starts with /api or ff by /api*
+          - path: /api/?(.*) #send requests to any path that starts with /api or ff by /api*
+            backend:
+              serviceName: server-cluster-ip-service
+              servicePort: 5000
+    - host: www.faloladare.com.ng
+    - http:
+        paths:
+          - path: /?(.*) #send requests to any path that starts with / or ff by /* and not /api
+            backend:
+              serviceName: client-cluster-ip-service
+              servicePort: 3000
+          - path: /api/?(.*) #send requests to any path that starts with /api or ff by /api*
             backend:
               serviceName: server-cluster-ip-service
               servicePort: 5000

@@ -15,6 +15,6 @@ spec:
     config:
       - http01:
           ingressClass: nginx
-      domains:
-        - faloladare.com.ng
-        - www.faloladare.com.ng
+        domains:
+          - faloladare.com.ng
+          - www.faloladare.com.ng
